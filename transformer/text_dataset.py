@@ -353,7 +353,7 @@ def split_article(tokens: np.ndarray, sequence_length: int, split: str,
 
 
 def nonzero_tokens(tokens: np.ndarray,
-                   loss_mask: Optional[np.ndarray]) -> list[int]:
+                   loss_mask: Optional[np.ndarray]) -> Sequence[int]:
   """Removes tokens that are not predicted by the model."""
   # TODO(delesley): Fix the model so that it predicts the first token.
   # The language model doesn't predict the first token.

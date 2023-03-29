@@ -12,9 +12,9 @@ on_error(){
 trap 'on_error' ERR
 # export DEBUG=1
 # export BUCKET=meliad_eu2
+#  ./bin/interactive_tpu.py --node_id 4 --version 4 --zone "us-central2-b" --bucket "meliad2_us2" --cores 64 --project "tpu-project-2-379909" --repo_name meliad
 export BUCKET=meliad2_us2
-git pull
-git checkout original_code
+
 # gsutil cp gs://$BUCKET/experiments/cosine_pg19/config.gin .
 /usr/bin/env python3 transformer/ht_main.py --alsologtostderr \
 --gin_file=base_htrans.gin \
