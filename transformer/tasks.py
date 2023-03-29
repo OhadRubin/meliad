@@ -26,11 +26,21 @@ import tensorflow as tf
 TaskRegistry = seqio.TaskRegistry
 
 
+import os
+
+TaskRegistry = seqio.TaskRegistry
+
+
 def define_pg19_task(name: str, vocab: seqio.Vocabulary):
+  tfds_data_dir = None
+  if "BUCKET" in os.environ:
+    BUCKET = os.environ["BUCKET"]
+    tfds_data_dir = f"gs://{BUCKET}/data"
   seqio.TaskRegistry.add(
       name,
       seqio.TfdsDataSource(
-          tfds_name="pg19:0.1.1"
+          tfds_name="pg19:0.1.1",
+          tfds_data_dir=tfds_data_dir,
       ),
       preprocessors=[
           functools.partial(text_dataset.rekey_articles,
