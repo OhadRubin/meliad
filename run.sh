@@ -23,6 +23,7 @@ export BUCKET=meliad2_us2
 --gin_file=options/lr_cosine_decay.gin \
 --gin_file=tasks/pg19_tokens.gin \
 --gin_file=recurrent/bias_skip.gin \
+--gin_file=/home/ohadr/meliad/transformer/configs/size/medium_150M.gin \
 --workdir=gs://$BUCKET/experiments/cosine_pg19_2
 
 # /usr/bin/env python3 transformer/ht_main_inference.py --alsologtostderr \
