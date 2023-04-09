@@ -1,0 +1,180 @@
+import optimizer_config
+import training_loop
+from transformer import attention
+from transformer import decoder_stack
+from transformer import models
+from transformer import nn_components
+from transformer import text_dataset
+from transformer import transformer_base
+from transformer import transformer_layer
+
+# Macros:
+# ==============================================================================
+ATTN_DROPOUT_RATE = 0.05
+DROPOUT_RATE = 0.05
+DTYPE = 'bfloat16'
+EMBED_DIM = 1024
+HEAD_DIM = 128
+MLP_DIM = 4096
+NUM_EMBEDDINGS = 32128
+NUM_HEADS = 8
+NUM_LAYERS = 12
+
+# Parameters for DecoderOnlyLanguageModel:
+# ==============================================================================
+DecoderOnlyLanguageModel.decoder_factory = @decoder_stack.DecoderStack
+DecoderOnlyLanguageModel.name = None
+DecoderOnlyLanguageModel.output_token_losses = False
+DecoderOnlyLanguageModel.sample_method = 'sample'
+DecoderOnlyLanguageModel.task_config = @decoder_stack.TransformerTaskConfig()
+
+# Parameters for DecoderStack:
+# ==============================================================================
+DecoderStack.dstack_window_length = 0
+DecoderStack.dtype = %DTYPE
+DecoderStack.embedding_size = %EMBED_DIM
+DecoderStack.embedding_stddev = 1.0
+DecoderStack.feedback_recurrence = False
+DecoderStack.final_dropout_rate = %DROPOUT_RATE
+DecoderStack.final_mlp_factory = None
+DecoderStack.layer_factory = @transformer_layer.TransformerLayer
+DecoderStack.memory_factory = None
+DecoderStack.memory_layer_indices = ()
+DecoderStack.name = None
+DecoderStack.num_layers = %NUM_LAYERS
+DecoderStack.recurrent_layer_indices = (-3,)
+DecoderStack.use_absolute_positions = False
+DecoderStack.use_final_layernorm = True
+
+# Parameters for FlaxAdafactorConfig:
+# ==============================================================================
+FlaxAdafactorConfig.beta1 = 0.9
+FlaxAdafactorConfig.learning_rate = 1.0
+
+# Parameters for get_loss_mask_tokens:
+# ==============================================================================
+get_loss_mask_tokens.loss_mask_end_tokens = ()
+get_loss_mask_tokens.loss_mask_start_tokens = ()
+get_loss_mask_tokens.splits = ('all',)
+
+# Parameters for KVQLayer:
+# ==============================================================================
+KVQLayer.name = None
+
+# Parameters for LayerNorm:
+# ==============================================================================
+LayerNorm.dtype = %DTYPE
+LayerNorm.enable_layernorm = True
+LayerNorm.epsilon = 1e-06
+LayerNorm.name = None
+LayerNorm.use_bias = False
+LayerNorm.use_mean = False
+LayerNorm.use_scalar_scale_bias = False
+LayerNorm.use_scale = True
+
+# Parameters for load_text_dataset:
+# ==============================================================================
+load_text_dataset.verbose = False
+
+# Parameters for transformer_attn/MLP:
+# ==============================================================================
+transformer_attn/MLP.hidden_activation = None
+transformer_attn/MLP.initializer_scale = 1.0
+transformer_attn/MLP.name = None
+transformer_attn/MLP.num_hidden_units = 0
+transformer_attn/MLP.num_layers = 1
+transformer_attn/MLP.use_bias = False
+
+# Parameters for transformer_ffn/MLP:
+# ==============================================================================
+transformer_ffn/MLP.hidden_activation = 'relu'
+transformer_ffn/MLP.initializer_scale = 1.0
+transformer_ffn/MLP.name = None
+transformer_ffn/MLP.num_hidden_units = %MLP_DIM
+transformer_ffn/MLP.num_layers = 2
+transformer_ffn/MLP.use_bias = False
+
+# Parameters for process_summaries_function:
+# ==============================================================================
+# None.
+
+# Parameters for set_default_data_directory:
+# ==============================================================================
+set_default_data_directory.directory_name = None
+
+# Parameters for T5RelativePositionBiases:
+# ==============================================================================
+T5RelativePositionBiases.name = None
+
+# Parameters for Trainer:
+# ==============================================================================
+Trainer.checkpoint_every_steps = 5000
+Trainer.generate_every_steps = 0
+Trainer.learning_rate_multiplier = 1.0
+Trainer.learning_rate_schedule = @optimizer_config.lr_cosine_decay
+Trainer.log_every_steps = 1000
+Trainer.max_scheduled_steps = 0
+Trainer.model_definition = @models.DecoderOnlyLanguageModel
+Trainer.num_steps = 500000
+Trainer.num_test_steps = 400
+Trainer.optimizer_factory = @optimizer_config.FlaxAdafactorConfig()
+Trainer.print_input_every_steps = 5000
+Trainer.print_variables = False
+Trainer.random_seed = 42
+Trainer.replicate_mode = True
+Trainer.restore_checkpoints = True
+Trainer.restore_state_variables = True
+Trainer.rng_key_names = ('dropout', 'sample')
+Trainer.save_checkpoints = True
+Trainer.status_every_steps = 10
+Trainer.test_every_steps = 1000
+Trainer.trace_debug_mode = False
+Trainer.use_separate_metric_directories = False
+Trainer.warmup_steps = 1000
+
+# Parameters for TransformerBase:
+# ==============================================================================
+TransformerBase.attn_mlp_factory = @transformer_attn/nn_components.MLP
+TransformerBase.dropout_rate = %DROPOUT_RATE
+TransformerBase.ffn_factory = @transformer_ffn/nn_components.MLP
+TransformerBase.gate_type = 'residual'
+TransformerBase.name = None
+TransformerBase.normalize_keys = True
+TransformerBase.post_attn_dropout = False
+TransformerBase.post_ffn_dropout = True
+TransformerBase.pre_attn_dropout = True
+TransformerBase.pre_ffn_dropout = False
+TransformerBase.single_gate = False
+TransformerBase.skip_ffn = False
+
+# Parameters for TransformerLayer:
+# ==============================================================================
+TransformerLayer.attn_dropout_rate = %ATTN_DROPOUT_RATE
+TransformerLayer.compute_importance = False
+TransformerLayer.dtype = %DTYPE
+TransformerLayer.head_size = %HEAD_DIM
+TransformerLayer.max_unrolled_windows = -1
+TransformerLayer.memory = None
+TransformerLayer.memory_num_neighbors = 0
+TransformerLayer.memory_reset_on_new_doc = True
+TransformerLayer.num_heads = %NUM_HEADS
+TransformerLayer.recurrent_gate_type = 'bias'
+TransformerLayer.recurrent_num_states = 512
+TransformerLayer.recurrent_single_gate = False
+TransformerLayer.recurrent_skip_ffn = True
+TransformerLayer.relative_position_type = 't5'
+TransformerLayer.supported_modes_for_cache = ('train', 'test')
+TransformerLayer.update_memory_modes = ('train', 'test')
+TransformerLayer.use_causal_mask = True
+TransformerLayer.use_long_xl_architecture = True
+TransformerLayer.window_length = 512
+
+# Parameters for TransformerTaskConfig:
+# ==============================================================================
+TransformerTaskConfig.batch_size = 1
+TransformerTaskConfig.dataset_name = 'pg19_tokens'
+TransformerTaskConfig.sequence_length = 4096
+TransformerTaskConfig.sequential_chunks = True
+TransformerTaskConfig.test_split = 'test'
+TransformerTaskConfig.train_split = 'train'
+TransformerTaskConfig.vocab_size = %NUM_EMBEDDINGS

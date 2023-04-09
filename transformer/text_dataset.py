@@ -320,7 +320,7 @@ def bytes_to_tokens(s: str):
   return np.fromiter((char for char in s), count=len(s), dtype=np.int32)
 
 
-def pad_chunk(s: Optional[np.ndarray], sequence_length: int):
+def pad_chunk(s, sequence_length: int):
   """Pad an array s out to the given sequence_length."""
   if s is None:
     return np.zeros(sequence_length, dtype=np.int32)
@@ -353,7 +353,7 @@ def split_article(tokens: np.ndarray, sequence_length: int, split: str,
 
 
 def nonzero_tokens(tokens: np.ndarray,
-                   loss_mask: Optional[np.ndarray]) -> list[int]:
+                   loss_mask):
   """Removes tokens that are not predicted by the model."""
   # TODO(delesley): Fix the model so that it predicts the first token.
   # The language model doesn't predict the first token.

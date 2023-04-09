@@ -18,6 +18,10 @@ This file provides a simple procedural API for loading a model, loading data,
 and running the model over data.  It is intended for use in, e.g., colabs.
 """
 
+from gin import config
+import tensorflow as tf
+config.register_file_reader(tf.io.gfile.GFile, tf.io.gfile.exists)
+
 from typing import Any, Dict, Optional, Sequence, Tuple
 
 from absl import logging
@@ -45,6 +49,7 @@ TaskState = Tuple[TrainState, int]
 DEFAULT_GIN_PATHS = [
     "transformer/configs"
 ]
+
 
 
 def parse_gin_configuration(gin_files: Optional[Sequence[str]],
@@ -78,7 +83,8 @@ def parse_gin_configuration(gin_files: Optional[Sequence[str]],
 
 
 def read_article(split: Optional[str] = None,
-                 verbose: bool = False) -> ArticleData:
+                 verbose: bool = False,
+                 dataset_name=None) -> ArticleData:
   """Read a single article from the dataset and save it as a list of blocks.
 
   This routine will return blocks for a single article; so the tokens will
@@ -92,7 +98,7 @@ def read_article(split: Optional[str] = None,
     A pair of (list_of_blocks, vocabulary)
   """
 
-  logging.info("Reading article.")
+  logging.info(f"Reading article. in {split}")
 
   text_dataset.set_default_data_directory()
   task_config = decoder_stack.TransformerTaskConfig()
@@ -100,9 +106,10 @@ def read_article(split: Optional[str] = None,
 
   if split is None:
     split = task_config.test_split
-
+  if dataset_name is None:
+    dataset_name = task_config.dataset_name
   (test_ds, vocab) = text_dataset.load_text_dataset(
-      name=task_config.dataset_name,
+      name=dataset_name,
       split=split,
       sequence_length=task_config.sequence_length,
       batch_size=batch_size,
@@ -116,33 +123,40 @@ def read_article(split: Optional[str] = None,
         "Task vocabulary size does not match configured vocab_size: " +
         f"{task_config.vocab_size} < {vocab.vocab_size}")
 
-  article_segments = []
   ds_iter = test_ds.as_numpy_iterator()
   vocab_map = {"targets": vocab}
-
+  # while True:
+  article_segments = []
   segment_num = 0
+  # try:
   while True:
-    try:
-      x = next(ds_iter)
-    except StopIteration:
-      logging.info("End of epoch? Something went wrong.")
-      break
+    
+    x = next(ds_iter)
+      
+    
 
     # Make sure we've started reading, otherwise it immediately quits...
     if article_segments:
       if x["start_of_sequence"][0]:
-        break
+        logging.info("Done reading article: %d segments.", segment_num)
+        logging.info("Num tokens = %d", segment_num * task_config.sequence_length)
+        yield (article_segments, vocab)
+        segment_num = 0
+        article_segments =[]
 
     if verbose:
       logging.info("Segment %d = %s", segment_num,
-                   text_dataset.pretty_print_article(x, vocab_map,
-                                                     max_length=10_000))
+                  text_dataset.pretty_print_article(x, vocab_map,
+                                                    max_length=10_000))
     article_segments.append(x)
     segment_num += 1
 
-  logging.info("Done reading article: %d segments.", segment_num)
-  logging.info("Num tokens = %d", segment_num * task_config.sequence_length)
-  return (article_segments, vocab)
+    
+    
+  # except StopIteration:
+  #   logging.info("End of epoch? Something went wrong.")
+  #   break
+   
 
 
 def create_model_and_task(vocab: seqio.Vocabulary,
@@ -227,8 +241,8 @@ def run_model(task: TrainingTask, task_state: TaskState,
       logging.info("Segment [%d] = %s", segment_num,
                    text_dataset.pretty_print_article(x, vocab_map,
                                                      max_length=10_000))
-    else:
-      logging.info("Segment %d, step %d.", segment_num, step)
+    # else:
+    #   logging.info("Segment %d, step %d.", segment_num, step)
 
     (tstate, metrics_np) = task.run_step(tstate, x, step)
     training_loop.run_interstep_callbacks("test", step)
@@ -242,7 +256,7 @@ def run_model(task: TrainingTask, task_state: TaskState,
     step += 1
 
   logging.info("Done running the model: %d segments.", segment_num)
-  return segment_outputs
+  return segment_outputs,(tstate, start_step)
 
 
 def get_token_losses(segment_outputs: Sequence[Any]) -> np.ndarray:

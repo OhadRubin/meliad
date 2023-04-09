@@ -18,7 +18,7 @@
 from typing import Any, Optional
 
 from absl import logging
-from flax import optim
+from transformer import optim
 from flax import struct
 import gin
 import jax.numpy as jnp

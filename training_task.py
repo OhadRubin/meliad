@@ -19,7 +19,7 @@ from typing import (Any, Callable, Dict, Iterator, Mapping, Optional, Tuple)
 
 from absl import logging
 from clu import metric_writers
-from flax import optim
+from transformer import optim
 from flax import struct
 import jax
 import  metrics_summary
